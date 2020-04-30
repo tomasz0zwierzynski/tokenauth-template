@@ -1,6 +1,7 @@
 package pl.tomzwi.tokenauth.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,9 @@ import java.util.Optional;
 
 @Service
 public class UserServiceImpl implements UserService {
+
+    @Value("${security.default.role}")
+    private String defaultRole;
 
     @Autowired
     private UserRepository userRepository;
@@ -50,13 +54,13 @@ public class UserServiceImpl implements UserService {
             throw new UserEmailAlreadyExistsException("Email already in use");
         }
 
-        Role defaultRole = roleService.getRoleByName( "DEFAULT" ); // TODO: prenisc do konfiguracji i zapewnic automatyczne role
+        Role defaultRoleObject = roleService.getRoleByName( defaultRole );
 
         User user = new User();
         user.setUsername(username);
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(password));
-        user.setRoles( Collections.singletonList(defaultRole) );
+        user.setRoles( Collections.singletonList(defaultRoleObject) );
 
         userRepository.save( user );
 

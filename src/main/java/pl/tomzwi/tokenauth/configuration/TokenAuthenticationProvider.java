@@ -6,13 +6,11 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import pl.tomzwi.tokenauth.entity.Role;
 import pl.tomzwi.tokenauth.entity.Token;
 import pl.tomzwi.tokenauth.exception.TokenNotFoundException;
-import pl.tomzwi.tokenauth.repository.TokenRepository;
 import pl.tomzwi.tokenauth.service.TokenService;
 
 import java.util.ArrayList;
