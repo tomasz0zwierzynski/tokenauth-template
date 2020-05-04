@@ -30,12 +30,18 @@ public class AppConfig extends WebSecurityConfigurerAdapter {
     @Value( "/${security.endpoint.token.prefix}" )
     private String tokenPrefix;
 
+    @Value( "/${security.endpoint.users.prefix}" )
+    private String usersPrefix;
+
     @Value( "${security.default.role}" )
     private String defaultRole;
 
     @Override
     public void configure(WebSecurity web) throws Exception {
-        web.ignoring().antMatchers(tokenPrefix + "/token");
+        web.ignoring().antMatchers(
+                tokenPrefix + "/token",
+                usersPrefix + "/register",
+                usersPrefix + "/activate");
     }
 
     @Override

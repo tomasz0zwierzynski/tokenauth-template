@@ -7,6 +7,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import pl.tomzwi.tokenauth.entity.Role;
 import pl.tomzwi.tokenauth.entity.User;
+import pl.tomzwi.tokenauth.exception.UserActivateCodeNotCorrectException;
 import pl.tomzwi.tokenauth.exception.UserAlreadyExistsException;
 import pl.tomzwi.tokenauth.exception.UserEmailAlreadyExistsException;
 import pl.tomzwi.tokenauth.exception.UserNotFoundException;
@@ -14,6 +15,7 @@ import pl.tomzwi.tokenauth.repository.UserRepository;
 
 import java.util.Collections;
 import java.util.Optional;
+import java.util.Random;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -29,6 +31,8 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    private final Random random = new Random();
 
     @Override
     public User getByUsername(String username) throws UserNotFoundException {
@@ -61,6 +65,23 @@ public class UserServiceImpl implements UserService {
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(password));
         user.setRoles( Collections.singletonList(defaultRoleObject) );
+        user.setGenerated( String.valueOf(random.nextInt(9999 - 1000) + 1000 ) );
+
+        userRepository.save( user );
+
+        return user;
+    }
+
+    @Override
+    public User activateUser(String username, String code) throws UserActivateCodeNotCorrectException {
+        User user = userRepository.findByUsername(username).orElseThrow( () -> new UserNotFoundException("User not found") );
+
+        if ( !user.getGenerated().equals( code ) ) {
+            throw new UserActivateCodeNotCorrectException("Activation code does not match");
+        }
+
+        user.setActive( true );
+        user.setGenerated( "" );
 
         userRepository.save( user );
 

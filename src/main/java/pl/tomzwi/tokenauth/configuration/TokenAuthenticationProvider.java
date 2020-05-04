@@ -36,6 +36,10 @@ public class TokenAuthenticationProvider implements AuthenticationProvider {
             throw new BadCredentialsException("Could not find token", ex);
         }
 
+        if ( !tokenObject.getUser().getActive() ) {
+            throw new BadCredentialsException("User not actived yet");
+        }
+
         List<Role> roles = tokenObject.getUser().getRoles();
         Collection<SimpleGrantedAuthority> granted = new ArrayList<>();
         roles.forEach( role -> {

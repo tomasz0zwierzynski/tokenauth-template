@@ -1,7 +1,7 @@
-DROP TABLE public.users IF EXISTS;
-DROP TABLE public.roles IF EXISTS;
-DROP TABLE public.userroles IF EXISTS;
-DROP TABLE public.tokens IF EXISTS;
+DROP TABLE IF EXISTS public.users;
+DROP TABLE IF EXISTS public.roles;
+DROP TABLE IF EXISTS public.userroles;
+DROP TABLE IF EXISTS public.tokens;
 
 CREATE TABLE public.users
 (

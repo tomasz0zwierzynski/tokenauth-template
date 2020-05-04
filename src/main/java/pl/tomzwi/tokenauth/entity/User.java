@@ -24,6 +24,11 @@ public class User {
     @Column( nullable = false )
     private String email;
 
+    @Column( nullable = false )
+    private Boolean active = false;
+
+    private String generated;
+
     @ManyToMany( fetch = FetchType.EAGER )
     @JoinTable(
             name = "userroles",
