@@ -33,15 +33,20 @@ public class AppConfig extends WebSecurityConfigurerAdapter {
     @Value( "/${security.endpoint.users.prefix}" )
     private String usersPrefix;
 
+    @Value( "/${security.endpoint.api.prefix}" )
+    private String apiPrefix;
+
     @Value( "${security.default.role}" )
     private String defaultRole;
+
+    @Value( "${security.inactive.role}" )
+    private String inactiveRole;
 
     @Override
     public void configure(WebSecurity web) throws Exception {
         web.ignoring().antMatchers(
                 tokenPrefix + "/token",
-                usersPrefix + "/register",
-                usersPrefix + "/activate");
+                usersPrefix + "/register");
     }
 
     @Override
@@ -51,7 +56,9 @@ public class AppConfig extends WebSecurityConfigurerAdapter {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeRequests()
-                .antMatchers("/**").hasRole( defaultRole )
+                .antMatchers(apiPrefix + "/**").hasRole( defaultRole )
+                .antMatchers( tokenPrefix + "/current" ).hasAnyRole( inactiveRole, defaultRole )
+                .antMatchers(usersPrefix + "/activate").hasRole( inactiveRole )
                 .anyRequest().authenticated()
                 .and()
                 .anonymous().disable()

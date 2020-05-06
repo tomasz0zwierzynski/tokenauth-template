@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping( "/api" )
+@RequestMapping( "/${security.endpoint.api.prefix}" )
 public class ResourceController {
 
     @GetMapping( "/resource" )

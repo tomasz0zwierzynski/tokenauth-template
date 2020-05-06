@@ -7,12 +7,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import pl.tomzwi.tokenauth.entity.Role;
 import pl.tomzwi.tokenauth.entity.User;
-import pl.tomzwi.tokenauth.exception.UserActivateCodeNotCorrectException;
-import pl.tomzwi.tokenauth.exception.UserAlreadyExistsException;
-import pl.tomzwi.tokenauth.exception.UserEmailAlreadyExistsException;
-import pl.tomzwi.tokenauth.exception.UserNotFoundException;
+import pl.tomzwi.tokenauth.exception.*;
 import pl.tomzwi.tokenauth.repository.UserRepository;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Random;
@@ -22,6 +20,9 @@ public class UserServiceImpl implements UserService {
 
     @Value("${security.default.role}")
     private String defaultRole;
+
+    @Value("${security.inactive.role}")
+    private String inactiveRole;
 
     @Autowired
     private UserRepository userRepository;
@@ -58,13 +59,13 @@ public class UserServiceImpl implements UserService {
             throw new UserEmailAlreadyExistsException("Email already in use");
         }
 
-        Role defaultRoleObject = roleService.getRoleByName( defaultRole );
+        Role inactiveRoleObject = roleService.getRoleByName( inactiveRole );
 
         User user = new User();
         user.setUsername(username);
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(password));
-        user.setRoles( Collections.singletonList(defaultRoleObject) );
+        user.setRoles( Collections.singletonList(inactiveRoleObject) );
         user.setGenerated( String.valueOf(random.nextInt(9999 - 1000) + 1000 ) );
 
         userRepository.save( user );
@@ -76,12 +77,20 @@ public class UserServiceImpl implements UserService {
     public User activateUser(String username, String code) throws UserActivateCodeNotCorrectException {
         User user = userRepository.findByUsername(username).orElseThrow( () -> new UserNotFoundException("User not found") );
 
-        if ( !user.getGenerated().equals( code ) ) {
+        if ( user.getActive() ) {
+            throw new UserAlreadyActivatedException("User activated!");
+        }
+
+        if ( !code.equals(user.getGenerated() != null ? user.getGenerated() : "") ) {
             throw new UserActivateCodeNotCorrectException("Activation code does not match");
         }
 
         user.setActive( true );
         user.setGenerated( "" );
+
+        Role defaultRoleObject = roleService.getRoleByName( defaultRole );
+        user.getRoles().clear();
+        user.getRoles().add( defaultRoleObject );
 
         userRepository.save( user );
 

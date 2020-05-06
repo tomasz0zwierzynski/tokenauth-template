@@ -1,7 +1,6 @@
 package pl.tomzwi.tokenauth.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.MailSender;
@@ -12,9 +11,9 @@ import pl.tomzwi.tokenauth.configuration.ErrorEntityPreparator;
 import pl.tomzwi.tokenauth.entity.Token;
 import pl.tomzwi.tokenauth.entity.User;
 import pl.tomzwi.tokenauth.exception.UserActivateCodeNotCorrectException;
+import pl.tomzwi.tokenauth.exception.UserAlreadyActivatedException;
 import pl.tomzwi.tokenauth.exception.UserAlreadyExistsException;
 import pl.tomzwi.tokenauth.exception.UserEmailAlreadyExistsException;
-import pl.tomzwi.tokenauth.model.ActivateUserBody;
 import pl.tomzwi.tokenauth.model.ErrorResponse;
 import pl.tomzwi.tokenauth.model.UserBody;
 import pl.tomzwi.tokenauth.service.TokenService;
@@ -51,16 +50,14 @@ public class UserController {
     }
 
     @PostMapping( "/activate" )
-    public ResponseEntity<Object> activate(@RequestBody ActivateUserBody activate ) {
+    public ResponseEntity<Object> activate(@RequestParam("code") String code, @CurrentlyLoggedUser User user ) {
 
-        Token token = tokenService.getToken(activate.getToken());
-
-        userService.activateUser( token.getUser().getUsername(), activate.getCode() );
+        userService.activateUser( user.getUsername(), code );
 
         return new ResponseEntity<>( HttpStatus.OK );
     }
 
-    @ExceptionHandler( { UserAlreadyExistsException.class, UserEmailAlreadyExistsException.class, UserActivateCodeNotCorrectException.class } )
+    @ExceptionHandler( { UserAlreadyExistsException.class, UserEmailAlreadyExistsException.class, UserActivateCodeNotCorrectException.class, UserAlreadyActivatedException.class } )
     public ResponseEntity<ErrorResponse> handleRegisterExceptions( Exception ex ) {
         return errorEntity.prepare( HttpStatus.FORBIDDEN, ex );
     }
