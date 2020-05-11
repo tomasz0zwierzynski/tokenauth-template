@@ -10,10 +10,7 @@ import pl.tomzwi.tokenauth.entity.User;
 import pl.tomzwi.tokenauth.exception.*;
 import pl.tomzwi.tokenauth.repository.UserRepository;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -91,6 +88,48 @@ public class UserServiceImpl implements UserService {
         Role defaultRoleObject = roleService.getRoleByName( defaultRole );
         user.getRoles().clear();
         user.getRoles().add( defaultRoleObject );
+
+        userRepository.save( user );
+
+        return user;
+    }
+
+    @Override
+    public User addRoles(String username, Collection<String> roles) throws UserNotFoundException, RoleNotFoundException {
+        User user = userRepository.findByUsername( username ).orElseThrow( () -> new UsernameNotFoundException("User not found"));
+
+        List<Role> userRoles = user.getRoles();
+
+        for ( String roleStr : roles ) {
+            if ( roleStr.equals( inactiveRole ) || roleStr.equals( defaultRole ) ) continue;
+
+            Role role = roleService.getRoleByName( roleStr );
+
+            if ( !userRoles.contains( role ) ) {
+                user.getRoles().add( role );
+            }
+        }
+
+        userRepository.save( user );
+
+        return user;
+    }
+
+    @Override
+    public User removeRoles(String username, Collection<String> roles) throws UserNotFoundException, RoleNotFoundException {
+        User user = userRepository.findByUsername( username ).orElseThrow( () -> new UsernameNotFoundException("User not found"));
+
+        List<Role> userRoles = user.getRoles();
+
+        for ( String roleStr : roles ) {
+            if ( roleStr.equals( inactiveRole ) || roleStr.equals( defaultRole ) ) continue;
+
+            Role role = roleService.getRoleByName( roleStr );
+
+            if ( userRoles.contains( role ) ) {
+                user.getRoles().remove( role );
+            }
+        }
 
         userRepository.save( user );
 

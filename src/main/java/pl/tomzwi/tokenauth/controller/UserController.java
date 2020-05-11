@@ -8,7 +8,7 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.web.bind.annotation.*;
 import pl.tomzwi.tokenauth.configuration.CurrentlyLoggedUser;
 import pl.tomzwi.tokenauth.configuration.ErrorEntityPreparator;
-import pl.tomzwi.tokenauth.entity.Token;
+import pl.tomzwi.tokenauth.entity.Role;
 import pl.tomzwi.tokenauth.entity.User;
 import pl.tomzwi.tokenauth.exception.UserActivateCodeNotCorrectException;
 import pl.tomzwi.tokenauth.exception.UserAlreadyActivatedException;
@@ -16,8 +16,15 @@ import pl.tomzwi.tokenauth.exception.UserAlreadyExistsException;
 import pl.tomzwi.tokenauth.exception.UserEmailAlreadyExistsException;
 import pl.tomzwi.tokenauth.model.ErrorResponse;
 import pl.tomzwi.tokenauth.model.UserBody;
+import pl.tomzwi.tokenauth.model.UserResponse;
+import pl.tomzwi.tokenauth.service.FreemarkerService;
 import pl.tomzwi.tokenauth.service.TokenService;
 import pl.tomzwi.tokenauth.service.UserService;
+
+import javax.validation.Valid;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping( "/${security.endpoint.users.prefix}" )
@@ -35,14 +42,19 @@ public class UserController {
     @Autowired
     private MailSender emailSender;
 
+    @Autowired
+    private FreemarkerService freemarkerService;
+
     @PostMapping( "/register" )
-    public ResponseEntity<Object> register(@RequestBody UserBody user) {
+    public ResponseEntity<Object> register(@RequestBody @Valid UserBody user) {
         User registeredUser = userService.registerUser(user.getUsername(), user.getPassword(), user.getEmail());
 
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo( "tomasz0zwierzynski@gmail.com" );
-        message.setSubject("Kod aktywacyjny");
-        message.setText( registeredUser.getGenerated() );
+        message.setTo( user.getEmail() );
+        message.setSubject( "Kod aktywacyjny" );
+
+        String text = freemarkerService.generateActivationMail( user.getUsername(), registeredUser.getGenerated() );
+        message.setText( text );
 
         emailSender.send( message );
 
@@ -55,6 +67,37 @@ public class UserController {
         userService.activateUser( user.getUsername(), code );
 
         return new ResponseEntity<>( HttpStatus.OK );
+    }
+
+    @GetMapping( "/roles" )
+    public ResponseEntity<UserResponse> getRoles(@RequestParam("username") String username ) {
+        User user = userService.getByUsername(username);
+
+        UserResponse response = new UserResponse( user.getUsername(), user.getEmail(), user.getRoles().stream().map(Role::getName).collect(Collectors.toList()));
+
+        return new ResponseEntity<>( response, HttpStatus.OK );
+    }
+
+    @PostMapping( "/roles" )
+    public ResponseEntity<UserResponse> addRoles(@RequestParam("username") String username, @RequestParam("roles") String roles ) {
+        List<String> requestedRoles = Arrays.asList( roles.split("\\s*,\\s*"));
+
+        User user = userService.addRoles(username, requestedRoles);
+
+        UserResponse response = new UserResponse( user.getUsername(), user.getEmail(), user.getRoles().stream().map(Role::getName).collect(Collectors.toList()));
+
+        return new ResponseEntity<>( response, HttpStatus.OK );
+    }
+
+    @DeleteMapping( "/roles" )
+    public ResponseEntity<UserResponse> removeRoles(@RequestParam("username") String username, @RequestParam("roles") String roles ) {
+        List<String> requestedRoles = Arrays.asList( roles.split("\\s*,\\s*"));
+
+        User user = userService.removeRoles(username, requestedRoles);
+
+        UserResponse response = new UserResponse( user.getUsername(), user.getEmail(), user.getRoles().stream().map(Role::getName).collect(Collectors.toList()));
+
+        return new ResponseEntity<>( response, HttpStatus.OK );
     }
 
     @ExceptionHandler( { UserAlreadyExistsException.class, UserEmailAlreadyExistsException.class, UserActivateCodeNotCorrectException.class, UserAlreadyActivatedException.class } )

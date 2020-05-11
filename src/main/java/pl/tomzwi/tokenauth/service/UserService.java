@@ -1,10 +1,9 @@
 package pl.tomzwi.tokenauth.service;
 
 import pl.tomzwi.tokenauth.entity.User;
-import pl.tomzwi.tokenauth.exception.UserActivateCodeNotCorrectException;
-import pl.tomzwi.tokenauth.exception.UserAlreadyExistsException;
-import pl.tomzwi.tokenauth.exception.UserEmailAlreadyExistsException;
-import pl.tomzwi.tokenauth.exception.UserNotFoundException;
+import pl.tomzwi.tokenauth.exception.*;
+
+import java.util.Collection;
 
 public interface UserService {
 
@@ -15,5 +14,10 @@ public interface UserService {
     User registerUser( String username, String password, String email ) throws UserAlreadyExistsException, UserEmailAlreadyExistsException;
 
     User activateUser( String username, String code ) throws UserActivateCodeNotCorrectException;
+
+
+    User addRoles( String username, Collection<String> roles ) throws UserNotFoundException, RoleNotFoundException;
+
+    User removeRoles( String username, Collection<String> roles ) throws UserNotFoundException, RoleNotFoundException;
 
 }

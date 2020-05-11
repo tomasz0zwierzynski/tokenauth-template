@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -42,11 +43,15 @@ public class AppConfig extends WebSecurityConfigurerAdapter {
     @Value( "${security.inactive.role}" )
     private String inactiveRole;
 
+    @Value( "${security.admin.role}" )
+    private String adminRole;
+
     @Override
     public void configure(WebSecurity web) throws Exception {
-        web.ignoring().antMatchers(
-                tokenPrefix + "/token",
-                usersPrefix + "/register");
+        web.ignoring()
+                .antMatchers( usersPrefix + "/register" )
+                .antMatchers( tokenPrefix + "/token");
+
     }
 
     @Override
@@ -59,6 +64,7 @@ public class AppConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers(apiPrefix + "/**").hasRole( defaultRole )
                 .antMatchers( tokenPrefix + "/current" ).hasAnyRole( inactiveRole, defaultRole )
                 .antMatchers(usersPrefix + "/activate").hasRole( inactiveRole )
+                .antMatchers( usersPrefix + "/roles" ).hasRole( adminRole )
                 .anyRequest().authenticated()
                 .and()
                 .anonymous().disable()

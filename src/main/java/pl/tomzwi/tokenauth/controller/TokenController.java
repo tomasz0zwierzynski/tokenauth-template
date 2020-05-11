@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.tomzwi.tokenauth.configuration.CurrentlyLoggedUser;
 import pl.tomzwi.tokenauth.configuration.ErrorEntityPreparator;
+import pl.tomzwi.tokenauth.entity.Role;
 import pl.tomzwi.tokenauth.entity.Token;
 import pl.tomzwi.tokenauth.entity.User;
 import pl.tomzwi.tokenauth.exception.InvalidUsernamePasswordException;
@@ -16,6 +17,7 @@ import pl.tomzwi.tokenauth.model.UserResponse;
 import pl.tomzwi.tokenauth.service.TokenService;
 
 import java.time.format.DateTimeFormatter;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping( "/${security.endpoint.token.prefix}" )
@@ -38,7 +40,7 @@ public class TokenController {
 
     @GetMapping( "/current" )
     public ResponseEntity<UserResponse> current(@CurrentlyLoggedUser User user) {
-        UserResponse userBody = new UserResponse(user.getUsername(), user.getEmail());
+        UserResponse userBody = new UserResponse(user.getUsername(), user.getEmail(), user.getRoles().stream().map(Role::getName).collect(Collectors.toList()));
 
         return new ResponseEntity<>( userBody, HttpStatus.OK );
     }
