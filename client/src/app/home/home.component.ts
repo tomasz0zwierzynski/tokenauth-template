@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ApiService, ENDPOINTS } from '../auth/http/api.service';
+import { AuthenticationService } from '../auth/authentication.service';
 
 @Component({
   selector: 'app-home',
@@ -9,17 +10,13 @@ import { ApiService, ENDPOINTS } from '../auth/http/api.service';
 })
 export class HomeComponent implements OnInit {
 
-  constructor( private http: HttpClient, private api: ApiService ) { }
+  constructor( private http: HttpClient, private api: ApiService, private authenticationService: AuthenticationService ) { }
 
   ngOnInit(): void {
   }
 
-  test() {
-    this.api.get(ENDPOINTS.CURRENT_USER)
-    // this.http.get(`http://localhost:8080/auth/current`)
-    .subscribe( data => {
-      console.log( data );
-    })
+  logout() {
+    this.authenticationService.logout(); 
   }
 
 }

@@ -33,8 +33,11 @@ public class TokenController {
     public ResponseEntity<TokenResponse> token(@RequestParam("username") final String username, @RequestParam("password") final String password) {
         Token token = tokenService.getToken(username, password);
         TokenResponse response = new TokenResponse(
+                token.getUser().getUsername(),
                 token.getToken(),
-                DateTimeFormatter.ISO_DATE_TIME.format(token.getExpires()) );
+                DateTimeFormatter.ISO_DATE_TIME.format(token.getExpires()),
+                token.getUser().getRoles().stream().map(Role::getName).collect(Collectors.toList())
+                );
         return new ResponseEntity<>( response, HttpStatus.OK );
     }
 

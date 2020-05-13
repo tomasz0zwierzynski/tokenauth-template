@@ -1,6 +1,7 @@
 package pl.tomzwi.tokenauth.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import pl.tomzwi.tokenauth.entity.User;
 
 import java.util.Optional;

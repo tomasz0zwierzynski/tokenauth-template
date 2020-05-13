@@ -13,8 +13,9 @@ public interface UserService {
 
     User registerUser( String username, String password, String email ) throws UserAlreadyExistsException, UserEmailAlreadyExistsException;
 
-    User activateUser( String username, String code ) throws UserActivateCodeNotCorrectException;
+    User activateUser( String username, String code ) throws UserNotFoundException, UserActivateCodeNotCorrectException, UserAlreadyActivatedException;
 
+    User activateUser( String username ) throws UserNotFoundException, UserAlreadyActivatedException;
 
     User addRoles( String username, Collection<String> roles ) throws UserNotFoundException, RoleNotFoundException;
 

@@ -22,13 +22,21 @@ export class AuthenticationService {
      return this.currentUserSubject.value;
    }
 
+   public hasRole(role: string): boolean {
+    if ( this.currentUserSubject.value ) {
+      return this.currentUserSubject.value.roles.includes( role );
+    } else {
+      return false;
+    }
+   }
+
    login(username, password) {
      return this.api.post<any>(ENDPOINTS.TOKEN, {username: username, password: password} )
-    //  return this.http.post<any>(`http://localhost:8080/auth/token?username=${username}&password=${password}`, {} )
      .pipe( map( (response: any) => {
       let user = new User;
       user.token = response.accessToken;
-      user.username = username;
+      user.username = response.username;
+      user.roles = response.roles;
 
       localStorage.setItem('currentUser', JSON.stringify(user));
       this.currentUserSubject.next(user);

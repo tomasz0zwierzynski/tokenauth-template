@@ -62,10 +62,15 @@ public class UserServiceImpl implements UserService {
         user.setUsername(username);
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(password));
-        user.setRoles( Collections.singletonList(inactiveRoleObject) );
+
+        List<Role> roles = new ArrayList<>();
+        roles.add( inactiveRoleObject );
+
+        user.setRoles(roles);
         user.setGenerated( String.valueOf(random.nextInt(9999 - 1000) + 1000 ) );
 
         userRepository.save( user );
+        userRepository.flush();
 
         return user;
     }
@@ -86,8 +91,34 @@ public class UserServiceImpl implements UserService {
         user.setGenerated( "" );
 
         Role defaultRoleObject = roleService.getRoleByName( defaultRole );
-        user.getRoles().clear();
-        user.getRoles().add( defaultRoleObject );
+
+        List<Role> roles = new ArrayList<>();
+
+        roles.add( defaultRoleObject );
+        user.setRoles( roles );
+
+        userRepository.save( user );
+
+        return user;
+    }
+
+    @Override
+    public User activateUser(String username) {
+        User user = userRepository.findByUsername(username).orElseThrow( () -> new UserNotFoundException("User not found") );
+
+        if ( user.getActive() ) {
+            throw new UserAlreadyActivatedException("User activated!");
+        }
+
+        user.setActive( true );
+        user.setGenerated( "" );
+
+        Role defaultRoleObject = roleService.getRoleByName( defaultRole );
+
+        List<Role> roles = new ArrayList<>();
+        roles.add( defaultRoleObject );
+
+        user.setRoles( roles );
 
         userRepository.save( user );
 

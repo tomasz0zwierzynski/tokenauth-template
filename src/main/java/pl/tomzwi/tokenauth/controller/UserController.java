@@ -1,6 +1,8 @@
 package pl.tomzwi.tokenauth.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.MailSender;
@@ -30,6 +32,9 @@ import java.util.stream.Collectors;
 @RequestMapping( "/${security.endpoint.users.prefix}" )
 public class UserController {
 
+    @Value("${security.email.verification}")
+    private boolean emailVerification;
+
     @Autowired
     private ErrorEntityPreparator errorEntity;
 
@@ -49,23 +54,30 @@ public class UserController {
     public ResponseEntity<Object> register(@RequestBody @Valid UserBody user) {
         User registeredUser = userService.registerUser(user.getUsername(), user.getPassword(), user.getEmail());
 
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo( user.getEmail() );
-        message.setSubject( "Kod aktywacyjny" );
+        if ( emailVerification ) {
+            // send verification email
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(user.getEmail());
+            message.setSubject("Kod aktywacyjny");
 
-        String text = freemarkerService.generateActivationMail( user.getUsername(), registeredUser.getGenerated() );
-        message.setText( text );
+            String text = freemarkerService.generateActivationMail(user.getUsername(), registeredUser.getGenerated());
+            message.setText(text);
 
-        emailSender.send( message );
+            emailSender.send(message);
+        } else {
+            userService.activateUser( registeredUser.getUsername() );
+        }
 
         return new ResponseEntity<>( HttpStatus.OK );
     }
 
     @PostMapping( "/activate" )
     public ResponseEntity<Object> activate(@RequestParam("code") String code, @CurrentlyLoggedUser User user ) {
-
-        userService.activateUser( user.getUsername(), code );
-
+        if ( emailVerification ) {
+            userService.activateUser(user.getUsername(), code);
+        } else {
+            return new ResponseEntity<>( HttpStatus.FORBIDDEN );
+        }
         return new ResponseEntity<>( HttpStatus.OK );
     }
 
